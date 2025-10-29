@@ -1,20 +1,24 @@
 import socket
 import threading
 import tkinter as tk
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-client.connect(("192.168.x.x", 5052))
+import datetime as dt
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+IP = "192.168.50.8"
+PORT = 5052
+client.connect((IP, PORT))
 print("Connected")
 
 window = tk.Tk()
 window.title("Chat")
-chatBox = tk.Text(window, state="disabled", width=50, height=15)
+chatBox = tk.Text(window, state="disabled")
 chatBox.pack()
 entry = tk.Entry(window)
 entry.pack(side=tk.LEFT)
 username = "User"
 
+
 def sendMessage():
-    msg = f'{username}: {entry.get()}'
+    msg = f'{dt.datetime.now().strftime('[%I:%M %p]')} {username}: {entry.get()}'
     if msg:
         try:
             client.sendall(msg.encode("utf-8"))
@@ -30,9 +34,10 @@ def sendMessage():
             chatBox.see(tk.END)
 
 
-
+entry.bind("<Return>", lambda event: sendMessage())
 sendBtn = tk.Button(window, text='send', command=sendMessage)
 sendBtn.pack(side=tk.LEFT)
+
 
 def recieveMessage():
     while 1:
@@ -49,6 +54,34 @@ def recieveMessage():
             client.close()
             break
 
+def connect():
+    global client
+    try:
+        client.close()
+    except:
+        pass
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((IP, PORT))
+        threading.Thread(target=recieveMessage, daemon=True).start()
+        chatBox.config(state="normal")
+        chatBox.insert(tk.END, "Connected\n")
+        chatBox.config(state="disabled")
+    except:
+        chatBox.config(state="normal")
+        chatBox.insert(tk.END, "Unable to reach server, try again later\n")
+        chatBox.config(state="disabled")
+
+
+reconnectBtn = tk.Button(window, text='reconnect', command=connect)
+reconnectBtn.pack(side=tk.LEFT)
+
+def clear():
+    chatBox.delete("1.0", tk.END)
+
+
+clearBtn = tk.Button(window, text='clear', command=clear)
+clearBtn.pack(side=tk.LEFT)
 
 threading.Thread(target=recieveMessage, daemon=True).start()
 
