@@ -77,7 +77,9 @@ reconnectBtn = tk.Button(window, text='reconnect', command=connect)
 reconnectBtn.pack(side=tk.LEFT)
 
 def clear():
+    chatBox.config(state="normal")
     chatBox.delete("1.0", tk.END)
+    chatBox.config(state="disabled")
 
 
 clearBtn = tk.Button(window, text='clear', command=clear)
